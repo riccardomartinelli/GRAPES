@@ -10,6 +10,8 @@
  *
  */
 
+typedef enum chunk_type { MEDIA_TYPE = 0, DATA_TYPE = 1 } Chunk_type;
+
 /**
  * Structure describing a chunk. This is part of the
  * public API
@@ -50,5 +52,7 @@ typedef struct chunk {
     * Default is 1
    */
    int flow_id;
+
+   Chunk_type chunk_type;
 } Chunk;
 #endif

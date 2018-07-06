@@ -32,6 +32,7 @@ int encodeChunk(const struct chunk *c, uint8_t *buff, int buff_len)
   int_cpy(buff + 12, c->size);
   int_cpy(buff + 16, c->attributes_size);
   int_cpy(buff + 20, c->flow_id);
+  int_cpy(buff + 24, c->chunk_type);
 
   memcpy(buff + CHUNK_HEADER_SIZE, c->data, c->size);
   if (c->attributes_size) {
@@ -53,6 +54,7 @@ int decodeChunk(struct chunk *c, const uint8_t *buff, int buff_len)
   c->size = int_rcpy(buff + 12);
   c->attributes_size = int_rcpy(buff + 16);
   c->flow_id = int_rcpy(buff + 20);
+  c->chunk_type = int_rcpy(buff + 24);
 
   if (buff_len < c->size + CHUNK_HEADER_SIZE) {
     return -2;
