@@ -19,6 +19,7 @@ struct chunk_buffer {
   int num_chunks;
   int flow_id;
   struct chunk *buffer;
+  int *chunk_ack_waiting;
 };
 
 static void insert_sort(struct chunk *b, int size)
@@ -114,11 +115,39 @@ struct chunk_buffer *cb_init(const char *config)
   }
 
   cb->flow_id=0;
+
+  cb->chunk_ack_waiting = malloc(sizeof(int) * cb->size);
+  if (cb->chunk_ack_waiting == NULL) {
+    free(cb);
+    return NULL;
+  }
+
   return cb;
 }
 
-int cb_add_chunk(struct chunk_buffer *cb, const struct chunk *c)
+void cb_ack_received(struct chunk_buffer *cb, int chunk_id)
 {
+  if(cb) {
+    for (int i = 0; i < cb->size; i++) {
+      if(cb->buffer[i].id == chunk_id) {
+        cb->chunk_ack_waiting = -1;
+      }
+    }
+  }
+}
+
+void cb_ack_expect(struct chunk_buffer *cb, int chunk_id)
+{
+  if(cb) {
+    for (int i = 0; i < cb->size; i++) {
+      if(cb->buffer[i].id == chunk_id) {
+        cb->chunk_ack_waiting = +1;
+      }
+    }
+  }
+}
+
+int cb_add_media_chunk(struct chunk_buffer *cb, const struct chunk *c) {
   int i;
 
   if (cb->num_chunks == cb->size) {
@@ -142,6 +171,18 @@ int cb_add_chunk(struct chunk_buffer *cb, const struct chunk *c)
       return 0; 
     }
     i++;
+  }
+}
+
+int cb_add_data_chunk(struct chunk_buffer *cb, const struct chunk *c) {
+
+}
+
+int cb_add_chunk(struct chunk_buffer *cb, const struct chunk *c)
+{
+  switch(c->chunk_type) {
+    case MEDIA_TYPE: return cb_add_media_chunk(cb, c); break;
+    case DATA_TYPE: return cb_add_data_chunk(cb, c); break;
   }
 }
 
@@ -173,6 +214,7 @@ void cb_destroy(struct chunk_buffer *cb)
 {
   cb_clear(cb);
   free(cb->buffer);
+  free(cb->chunk_ack_waiting);
   free(cb);
 }
 

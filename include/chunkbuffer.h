@@ -117,6 +117,10 @@ int cb_get_flowid(const struct chunk_buffer *cb);
 void cb_set_flowid(struct chunk_buffer *cb, int flow_id);
 
 
+void cb_ack_received(struct chunk_buffer *cb, int chunk_id);
+
+
+void cb_ack_expect(struct chunk_buffer *cb, int chunk_id);
 
 /*
  * HA Functions

@@ -104,6 +104,12 @@ static struct chunkID_singleSet * getSet(struct chunkID_multiSet *h, int flow_id
 
 }
 
+int * chunkID_multiSet_get_elements(struct chunkID_multiSet *h, int flow_id, int *size) {
+  struct chunkID_singleSet *res = getSet(h, flow_id);
+  size = res->n_elements;
+  return res->elements;
+}
+
 int chunkID_multiSet_add_chunk(struct chunkID_multiSet *h, int chunk_id, int flow_id)
 {
   struct chunkID_singleSet *res=getSet(h, flow_id);
