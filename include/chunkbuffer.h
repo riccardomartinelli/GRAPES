@@ -48,6 +48,13 @@ typedef struct chunk_buffer ChunkBuffer;
  */
 struct chunk_buffer *cb_init(const char *config);
 
+/*
+void cb_ack_received(struct chunk_buffer *cb, int chunk_id, struct nodeID *peer_id);
+
+void cb_ack_expect(struct chunk_buffer *cb, int chunk_id, struct nodeID *peer_id);
+*/
+
+
 /**
  * Add a chunk to a buffer.
  *
@@ -117,10 +124,6 @@ int cb_get_flowid(const struct chunk_buffer *cb);
 void cb_set_flowid(struct chunk_buffer *cb, int flow_id);
 
 
-void cb_ack_received(struct chunk_buffer *cb, int chunk_id);
-
-
-void cb_ack_expect(struct chunk_buffer *cb, int chunk_id);
 
 /*
  * HA Functions
@@ -137,5 +140,7 @@ void cb_ack_expect(struct chunk_buffer *cb, int chunk_id);
  * @return a pointer to the requested chunk
 */
 const struct chunk *cb_get_chunk(const struct chunk_buffer *cb, int id);
+
+void cb_print_peer_ack_waiting (struct chunk_buffer *cb);
 
 #endif	/* CHUNKBUFFER_H */
