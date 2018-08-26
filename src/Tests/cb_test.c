@@ -12,6 +12,8 @@
 #include "chunk.h"
 #include "chunkbuffer.h"
 
+#include "net_helper.h"
+
 static struct chunk *chunk_forge(int id)
 {
   struct chunk *c;
@@ -29,6 +31,10 @@ static struct chunk *chunk_forge(int id)
   c->size = strlen(c->data) + 1;
   c->attributes_size = 0;
   c->attributes = NULL;
+
+  //mod
+  c->chunk_type = DATA_TYPE;
+
   return c;
 }
 
@@ -53,6 +59,18 @@ static void chunk_add(struct chunk_buffer *cb, int id)
   free(c);
 }
 
+static void chunk_ack_expect(struct chunk_buffer *cb, int id)
+{
+  struct nodeID *peer_id = create_node("127.0.0.1", 9999);
+  cb_ack_expect(cb, id, peer_id);
+}
+
+static void chunk_ack_received(struct chunk_buffer *cb, int id)
+{
+  struct nodeID *peer_id = create_node("127.0.0.1", 9999);
+  cb_ack_received(cb, id, peer_id);
+}
+
 static void cb_print(const struct chunk_buffer *cb)
 {
   struct chunk *buff;
@@ -74,6 +92,39 @@ int main(int argc, char *argv[])
 
     return -1;
   }
+
+  chunk_add(b, 1);
+  chunk_ack_expect(b, 1);
+
+  chunk_add(b, 2);
+  chunk_ack_expect(b, 2);
+
+  chunk_ack_received(b, 1);
+
+  chunk_add(b, 3);
+  chunk_ack_expect(b, 3);
+
+  chunk_add(b, 4);
+  chunk_ack_expect(b, 4);
+
+  chunk_add(b, 5);
+  chunk_ack_expect(b, 5);
+
+  chunk_add(b, 6);
+  chunk_ack_expect(b, 6);
+
+  chunk_add(b, 7);
+  chunk_ack_expect(b, 7);
+
+  chunk_add(b, 8);
+  chunk_ack_expect(b, 8);
+
+  chunk_add(b, 9);
+  chunk_ack_expect(b, 9);
+
+  cb_print_peer_ack_waiting(b);
+
+  /*
   chunk_add(b, 10);
   chunk_add(b, 5);
   chunk_add(b, 12);
@@ -101,6 +152,9 @@ int main(int argc, char *argv[])
   chunk_add(b, 2);
   chunk_add(b, 33);
   cb_print(b);
+  */
+
+
 
   cb_destroy(b);
 

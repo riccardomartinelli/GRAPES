@@ -64,6 +64,7 @@ topology_test_th: LDFLAGS += -pthread
 chunk_encoding_test: chunk_encoding_test.o
 
 cb_test: cb_test.o
+cb_test: $(NET_HELPER).o
 
 chunkidms_encoding: chunkidms_encoding.o
 chunkidms_signaling: chunkidms_signaling.o net_helpers.o

@@ -13,8 +13,7 @@
 #include "chunk.h"
 #include "chunkbuffer.h"
 #include "grapes_config.h"
-
-#include "peer.h"
+#include "net_helper.h"
 
 typedef struct peerNode {
   struct nodeID *node_id;
@@ -146,6 +145,7 @@ struct chunk_buffer *cb_init(const char *config)
 
   cb->flow_id=0;
 
+  printf("init peer_ack_waiting \n");
   cb->peer_ack_waiting = malloc(sizeof(peerNode*) * cb->size);
   for (i = 0; i < cb->size; i++) {
     cb->peer_ack_waiting[i] = NULL;
@@ -154,54 +154,58 @@ struct chunk_buffer *cb_init(const char *config)
   return cb;
 }
 
-void cb_ack_received(struct chunk_buffer *cb, int chunk_id, struct peer *peer_id)
+void cb_ack_received(struct chunk_buffer *cb, int chunk_id, struct nodeID *peer_id)
 {
   if(cb) {
     for (int i = 0; i < cb->size; i++) {
       if(cb->buffer[i].id == chunk_id
       && cb->buffer[i].chunk_type == DATA_TYPE) {
-        peerNode * tmp_peerNode = cb->peer_ack_waiting[i];
-        peerNode * tmp_peerNode_pre = NULL;
-        while(tmp_peerNode != NULL) {
-          if(nodeid_equal(tmp_peerNode->node_id, peer_id->id)) {      //CRASHA QUI
-            if(tmp_peerNode_pre == NULL){
+        peerNode * headNode = cb->peer_ack_waiting[i];
+        peerNode * preNode = NULL;
+        while(headNode != NULL) {
+          if(nodeid_equal(headNode->node_id, peer_id)) { 
+            if(preNode == NULL){
               cb->peer_ack_waiting[i] = NULL;
             }else{
-              tmp_peerNode_pre->next = tmp_peerNode->next;             
+              preNode->next = headNode->next;             
             }
 
-            nodeid_free(tmp_peerNode->node_id);    
-            free(tmp_peerNode);
-            tmp_peerNode = tmp_peerNode_pre;    
-          }
-          tmp_peerNode_pre = tmp_peerNode;
-          tmp_peerNode = tmp_peerNode->next;
+            nodeid_free(headNode->node_id);    
+            free(headNode);
+            headNode = headNode->next;    
+          }else {
+            preNode = headNode;
+            headNode = headNode->next;
+          }          
         }
       }
     }
   }
 }
 
-void cb_ack_expect(struct chunk_buffer *cb, int chunk_id, struct peer *peer_id) {
-  if(cb) {    
-    cb_print_peer_ack_waiting(cb);
-    for (int i = 0; i < cb->size; i++) {
+void cb_ack_expect(struct chunk_buffer *cb, int chunk_id, struct nodeID *peer_id) {
+  if(cb) {
+    for (int i = 0; i < cb->num_chunks; i++) {
       if(cb->buffer[i].id == chunk_id
-      && cb->buffer[i].chunk_type == DATA_TYPE) {
-        printf("chunk DATA_TYPE \n");
+      && cb->buffer[i].chunk_type == DATA_TYPE) { 
         peerNode *newPeerNode = malloc(sizeof(peerNode));
-        newPeerNode->node_id = nodeid_dup(peer_id->id);
+        newPeerNode->node_id = (struct nodeID *)nodeid_dup(peer_id);
         newPeerNode->next = NULL;
 
+        //printf("0 peer_id: %d \n", peer_id);
+        //printf("0 newPeerNode->node_id: %d \n", newPeerNode->node_id);
+
         peerNode *headNode = cb->peer_ack_waiting[i];
+        //printf("cb->peer_ack_waiting[%d] pt: %d \n", i, cb->peer_ack_waiting[i]);
+        //printf("cb->peer_ack_waiting: %d \n", cb->peer_ack_waiting);
         if(headNode == NULL) {
           cb->peer_ack_waiting[i] = newPeerNode;
-          printf("chunk DATA_TYPE first added\n");
+          //printf("first added: cb->peer_ack_waiting[%d] pt: %d \n", i, cb->peer_ack_waiting[i]);
           return;
         }
 
         while(headNode->next != NULL) {
-          if(nodeid_equal(headNode->node_id, peer_id->id)) {
+          if(nodeid_equal(headNode->node_id, peer_id)) {
             nodeid_free(newPeerNode->node_id);
             free(newPeerNode);
             return; //Already waiting ack from this peer.
@@ -210,8 +214,10 @@ void cb_ack_expect(struct chunk_buffer *cb, int chunk_id, struct peer *peer_id) 
         } 
 
         headNode->next = newPeerNode;
+        //printf("other added: cb->peer_ack_waiting[%d] pt: %d \n", i, newPeerNode);
       }
     }
+    cb_print_peer_ack_waiting(cb);
   }  
 }
 
@@ -321,8 +327,10 @@ void cb_set_flowid(struct chunk_buffer *cb, int flow_id)
 
 void cb_print_peer_ack_waiting (struct chunk_buffer *cb) {
   if(cb){
-    for(int i = 0; i < cb->size; i++) {
+    printf("--- print peer_ack_waiting --- \n");    
+    for(int i = 0; i < cb->num_chunks; i++) {
       printf("waiting chunkId: %d \n", i);
+      printf("cb->peer_ack_waiting[%d] pt: %d \n", i, cb->peer_ack_waiting[i]);
       peerNode *tmpPeerNode = cb->peer_ack_waiting[i];
       if(tmpPeerNode == NULL) {
         printf("no peerWaiting \n");
@@ -332,5 +340,6 @@ void cb_print_peer_ack_waiting (struct chunk_buffer *cb) {
         tmpPeerNode = tmpPeerNode->next;
       }   
     }
+    printf("--- ---------------------- --- \n");   
   }
 }
