@@ -84,7 +84,7 @@ static int remove_oldest_chunk(struct chunk_buffer *cb, int id, uint64_t ts)
       return E_CB_DUPLICATE;
     }
     int size_i = listPeerNode_size(cb->peer_ack_waiting[i]);
-    if ((cb->buffer[i].id < min && min_size == size_i) || min_size < size_i) {
+    if ((cb->buffer[i].id < min && min_size == size_i) || size_i < min_size) {
       min = cb->buffer[i].id;
       min_size = size_i;
       pos_min = i;
@@ -192,15 +192,12 @@ void cb_ack_expect(struct chunk_buffer *cb, int chunk_id, struct nodeID *peer_id
         newPeerNode->node_id = (struct nodeID *)nodeid_dup(peer_id);
         newPeerNode->next = NULL;
 
-        //printf("0 peer_id: %d \n", peer_id);
-        //printf("0 newPeerNode->node_id: %d \n", newPeerNode->node_id);
+        printf("newPeerNode: %d \n", newPeerNode);
+        printf("peer_id: %d \n", peer_id);
 
         peerNode *headNode = cb->peer_ack_waiting[i];
-        //printf("cb->peer_ack_waiting[%d] pt: %d \n", i, cb->peer_ack_waiting[i]);
-        //printf("cb->peer_ack_waiting: %d \n", cb->peer_ack_waiting);
         if(headNode == NULL) {
           cb->peer_ack_waiting[i] = newPeerNode;
-          //printf("first added: cb->peer_ack_waiting[%d] pt: %d \n", i, cb->peer_ack_waiting[i]);
           return;
         }
 
@@ -214,11 +211,9 @@ void cb_ack_expect(struct chunk_buffer *cb, int chunk_id, struct nodeID *peer_id
         } 
 
         headNode->next = newPeerNode;
-        //printf("other added: cb->peer_ack_waiting[%d] pt: %d \n", i, newPeerNode);
       }
     }
-    cb_print_peer_ack_waiting(cb);
-  }  
+  }
 }
 
 int cb_add_media_chunk(struct chunk_buffer *cb, const struct chunk *c) {

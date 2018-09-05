@@ -99,8 +99,6 @@ int main(int argc, char *argv[])
   chunk_add(b, 2);
   chunk_ack_expect(b, 2);
 
-  chunk_ack_received(b, 1);
-
   chunk_add(b, 3);
   chunk_ack_expect(b, 3);
 
@@ -116,11 +114,39 @@ int main(int argc, char *argv[])
   chunk_add(b, 7);
   chunk_ack_expect(b, 7);
 
+  cb_print_peer_ack_waiting(b);
+
   chunk_add(b, 8);
   chunk_ack_expect(b, 8);
 
+  cb_print_peer_ack_waiting(b);
+
   chunk_add(b, 9);
   chunk_ack_expect(b, 9);
+
+  cb_print_peer_ack_waiting(b);
+
+  chunk_add(b, 10);
+  chunk_ack_expect(b, 10);
+
+  cb_print_peer_ack_waiting(b);
+
+  chunk_add(b, 11);
+  chunk_ack_expect(b, 11);
+
+  cb_print_peer_ack_waiting(b);
+
+  chunk_ack_received(b, 1);
+  chunk_ack_received(b, 2);
+  chunk_ack_received(b, 3);
+  chunk_ack_received(b, 4);
+  chunk_ack_received(b, 5);
+  chunk_ack_received(b, 6);
+  chunk_ack_received(b, 7);
+  chunk_ack_received(b, 8);
+  
+  chunk_ack_received(b, 10);
+  chunk_ack_received(b, 11);
 
   cb_print_peer_ack_waiting(b);
 
