@@ -62,7 +62,13 @@ int sendChunk(const struct nodeID * localID, const struct nodeID *to, const stru
 
     return -2;
   }
-  send_to_peer(localID, to, buff, buff_len + 1);
+
+  switch(c->chunk_type) {
+    case DATA_TYPE: send_to_peer_reliable(localID, to, buff, buff_len + 1); break;
+    case MEDIA_TYPE: send_to_peer(localID, to, buff, buff_len + 1); break;
+    default: send_to_peer(localID, to, buff, buff_len + 1); break;
+  }
+
   free(buff);
 
   return EXIT_SUCCESS;

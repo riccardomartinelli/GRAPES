@@ -293,14 +293,25 @@ void bind_msg_type (uint8_t msgtype)
 {
 }
 
+typedef enum msg_type { NOT_RELIABLE = 0, RELIABLE = 1 } Msg_type;
+
 struct my_hdr_t {
   uint8_t m_seq;
   uint8_t frag_seq;
   uint8_t frags;
 } __attribute__((packed));
 
-int send_to_peer(const struct nodeID *from, const struct nodeID *to, const uint8_t *buffer_ptr, int buffer_size)
+uint8_t * setMsgType(Msg_type msgType, const uint8_t *buffer_ptr, int buffer_size) 
 {
+  uint8_t * new_buffer = malloc(buffer_size +  sizeof(Msg_type));
+  memcpy(new_buffer, &msgType, sizeof(Msg_type));
+  memcpy(new_buffer + sizeof(Msg_type), buffer_ptr, buffer_size);
+  return new_buffer;
+}
+
+int send(const struct nodeID *from, const struct nodeID *to, const uint8_t *buffer_ptr, int buffer_size, Msg_type msgType)
+{
+  buffer_ptr = setMsgType(msgType, buffer_ptr, buffer_size);
   struct msghdr msg = {0};
   static struct my_hdr_t my_hdr;
   struct iovec iov[2];
@@ -338,7 +349,20 @@ int send_to_peer(const struct nodeID *from, const struct nodeID *to, const uint8
     }
   } while (buffer_size > 0);
 
+  free(buffer_ptr);
+  
   return res;
+}
+
+int send_to_peer(const struct nodeID *from, const struct nodeID *to, const uint8_t *buffer_ptr, int buffer_size)
+{
+  Msg_type msgType = NOT_RELIABLE;  
+  send(from, to, buffer_ptr, buffer_size, msgType);
+}
+
+int send_to_peer_reliable(const struct nodeID *from, const struct nodeID *to, const uint8_t *buffer_ptr, int buffer_size)
+{
+  return -1;
 }
 
 int recv_from_peer(const struct nodeID *local, struct nodeID **remote, uint8_t *buffer_ptr, int buffer_size)
