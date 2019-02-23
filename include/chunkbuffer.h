@@ -48,12 +48,6 @@ typedef struct chunk_buffer ChunkBuffer;
  */
 struct chunk_buffer *cb_init(const char *config);
 
-/*
-void cb_ack_received(struct chunk_buffer *cb, int chunk_id, struct nodeID *peer_id);
-
-void cb_ack_expect(struct chunk_buffer *cb, int chunk_id, struct nodeID *peer_id);
-*/
-
 
 /**
  * Add a chunk to a buffer.
